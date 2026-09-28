@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Automation Playground</title>
+<style>
+:root{--bg:#f3f5f7;--panel:#fff;--ink:#18242b;--mute:#5f7079;--line:#d6dde2;--acc:#0f766e;--bad:#c4382f;--ok:#1f8a5b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10191e;--panel:#182830;--ink:#e6eef1;--mute:#94a7b0;--line:#2b414a;--acc:#4fd1c5;--bad:#ff7a70;--ok:#4cc38a}}
+:root[data-theme="dark"]{--bg:#10191e;--panel:#182830;--ink:#e6eef1;--mute:#94a7b0;--line:#2b414a;--acc:#4fd1c5;--bad:#ff7a70;--ok:#4cc38a}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:18px 24px;border-bottom:1px solid var(--line);background:var(--panel)}
+header h1{margin:0;font-size:20px}
+header p{margin:2px 0 0;color:var(--mute);font-size:13px}
+.wrap{display:grid;grid-template-columns:200px 1fr;max-width:1100px;margin:0 auto}
+nav{padding:16px 10px;display:flex;flex-direction:column;gap:2px}
+nav a{padding:8px 10px;border-radius:6px;color:var(--mute);text-decoration:none}
+nav a.on{background:var(--panel);color:var(--ink);font-weight:600;box-shadow:inset 3px 0 var(--acc)}
+main{padding:20px 24px}
+section{display:none}
+section.on{display:block}
+h2{margin:0 0 4px;font-size:21px}
+.hint{color:var(--mute);margin:0 0 16px;font-size:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:14px}
+label{display:block;font-size:13px;color:var(--mute);margin:8px 0 3px}
+input[type=text],input[type=password],input[type=email],input[type=date],select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px}
+.inl{display:inline-flex;gap:6px;align-items:center;margin-right:14px;color:var(--ink);font-size:15px}
+button,.btn{font:inherit;background:var(--acc);color:#fff;border:0;border-radius:6px;padding:8px 14px;cursor:pointer;margin:8px 8px 0 0}
+[data-theme="dark"] button,[data-theme="dark"] .btn{color:#062522}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) button{color:#062522}}
+button.alt{background:none;color:var(--ink);border:1px solid var(--line)}
+button:disabled{opacity:.45;cursor:not-allowed}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.msg{margin-top:10px;padding:8px 10px;border-radius:6px;font-size:14px}
+.msg.err{background:color-mix(in srgb,var(--bad) 15%,transparent);color:var(--bad)}
+.msg.ok{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%}
+th,td{text-align:left;padding:8px;border-bottom:1px solid var(--line)}
+th{cursor:pointer;user-select:none}
+.drag{display:flex;gap:16px;flex-wrap:wrap}
+.zone{flex:1;min-width:150px;min-height:110px;border:2px dashed var(--line);border-radius:8px;padding:10px}
+.item{background:var(--acc);color:#fff;padding:8px;border-radius:6px;cursor:grab;display:inline-block}
+.menu{position:relative;display:inline-block}
+.menu .sub{display:none;position:absolute;top:100%;left:0;background:var(--panel);border:1px solid var(--line);border-radius:6px;min-width:160px;z-index:2}
+.menu:hover .sub{display:block}
+.menu .sub a{display:block;padding:8px 10px;color:var(--ink);text-decoration:none}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:5}
+.modal.open{display:flex}
+.modal .card{max-width:340px;margin:0}
+.spin{display:inline-block;width:18px;height:18px;border:3px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:s 1s linear infinite;vertical-align:middle}
+@keyframes s{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:3s}}
+.acc h3{margin:0;font-size:15px}
+.acc button.alt{width:100%;text-align:left;margin:4px 0 0}
+.panel{display:none;padding:8px 10px}
+.panel.open{display:block}
+#log{font:12px ui-monospace,Menlo,monospace;color:var(--mute);max-height:120px;overflow:auto;white-space:pre-wrap}
+@media(max-width:700px){.wrap{grid-template-columns:1fr}nav{flex-direction:row;overflow-x:auto}nav a{white-space:nowrap}main{padding:16px}}
+</style>
+</head>
+<body>
+<header><h1 id="site-title">Automation Playground</h1><p>A practice site for Selenium, Playwright, Cypress and friends. Every element has a stable <code>id</code> and <code>data-testid</code>.</p></header>
+<div class="wrap">
+<nav id="nav"></nav>
+<main>
+
+<section id="login"><h2>Login</h2><p class="hint">Valid user: <b>tester</b> / <b>Test@123</b>. Three wrong attempts lock the form.</p>
+<div class="card"><form id="login-form" data-testid="login-form" novalidate>
+<label for="username">Username</label><input type="text" id="username" data-testid="username" autocomplete="off">
+<label for="password">Password</label><input type="password" id="password" data-testid="password" autocomplete="off">
+<button type="submit" id="login-btn" data-testid="login-btn">Log in</button></form>
+<div id="login-msg" data-testid="login-msg" role="status"></div></div></section>
+
+<section id="forms"><h2>Form elements</h2><p class="hint">Text, dropdown, radio, checkbox, date and validation. Name and email are required.</p>
+<div class="card"><form id="reg-form" novalidate>
+<label for="name">Full name</label><input type="text" id="name" data-testid="name">
+<label for="email">Email</label><input type="email" id="email" data-testid="email">
+<label for="country">Country</label><select id="country" data-testid="country"><option value="">Select…</option><option value="de">Germany</option><option value="in">India</option><option value="us">United States</option></select>
+<label>Gender</label><span class="inl"><input type="radio" name="g" id="g-f" value="female" data-testid="g-female"><label for="g-f" class="inl">Female</label></span><span class="inl"><input type="radio" name="g" id="g-m" value="male" data-testid="g-male"><label for="g-m" class="inl">Male</label></span><span class="inl"><input type="radio" name="g" id="g-o" value="other" data-testid="g-other"><label for="g-o" class="inl">Other</label></span>
+<label>Interests</label><span class="inl"><input type="checkbox" id="i-t" value="testing" data-testid="i-testing"><label for="i-t" class="inl">Testing</label></span><span class="inl"><input type="checkbox" id="i-c" value="coding" data-testid="i-coding"><label for="i-c" class="inl">Coding</label></span>
+<label for="dob">Date of birth</label><input type="date" id="dob" data-testid="dob">
+<label for="bio">Bio</label><textarea id="bio" data-testid="bio" rows="3"></textarea>
+<button type="submit" id="reg-submit" data-testid="reg-submit">Register</button></form>
+<div id="reg-msg" data-testid="reg-msg" role="status"></div></div></section>
+
+<section id="dynamic"><h2>Dynamic content</h2><p class="hint">Practise explicit waits, visibility and enabled-state checks.</p>
+<div class="card"><button id="load-btn" data-testid="load-btn">Load content (3s)</button><span id="spinner" class="spin" hidden></span><div id="loaded" data-testid="loaded" class="msg ok" hidden>Content loaded!</div></div>
+<div class="card"><button id="toggle-btn" data-testid="toggle-btn" class="alt">Show / hide text</button><p id="toggle-text" data-testid="toggle-text">Now you see me.</p></div>
+<div class="card"><input type="text" id="enable-input" data-testid="enable-input" placeholder="Disabled until enabled" disabled><button id="enable-btn" data-testid="enable-btn" class="alt">Enable input</button></div>
+<div class="card"><button id="rand-btn" data-testid="rand-btn" class="alt">Appear after random delay (1–5s)</button><div id="rand-out" data-testid="rand-out" class="msg ok" hidden></div></div></section>
+
+<section id="alerts"><h2>Alerts and modal</h2><p class="hint">Browser dialogs need special handling in your driver.</p>
+<div class="card"><button id="alert-btn" data-testid="alert-btn">JS alert</button><button id="confirm-btn" data-testid="confirm-btn">JS confirm</button><button id="prompt-btn" data-testid="prompt-btn">JS prompt</button><button id="modal-btn" data-testid="modal-btn">Open modal</button>
+<div id="alert-out" data-testid="alert-out" class="msg ok" hidden></div></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true"><div class="card"><h3 style="margin-top:0">Custom modal</h3><p>Close it with the button below.</p><button id="modal-close" data-testid="modal-close">Close</button></div></div></section>
+
+<section id="table"><h2>Table</h2><p class="hint">Filter, sort by clicking a header, and delete rows.</p>
+<div class="card"><label for="filter">Filter by name</label><input type="text" id="filter" data-testid="filter"><div class="scroll"><table id="users" data-testid="users"><thead><tr><th data-k="id">ID</th><th data-k="name">Name</th><th data-k="role">Role</th><th data-k="age">Age</th><th>Action</th></tr></thead><tbody></tbody></table></div><p id="row-count" data-testid="row-count" class="hint"></p></div></section>
+
+<section id="mouse"><h2>Mouse actions</h2><p class="hint">Drag and drop, hover, double-click and right-click.</p>
+<div class="card drag"><div class="zone" id="zone-a" data-testid="zone-a"><div class="item" id="drag-item" data-testid="drag-item" draggable="true">Drag me</div></div><div class="zone" id="zone-b" data-testid="zone-b"></div></div>
+<div class="card"><div class="menu"><button id="hover-btn" data-testid="hover-btn" class="alt">Hover me</button><div class="sub"><a href="#mouse" id="hover-link" data-testid="hover-link">Hidden link</a></div></div>
+<button id="dbl-btn" data-testid="dbl-btn" class="alt">Double-click me</button><button id="ctx-btn" data-testid="ctx-btn" class="alt">Right-click me</button><div id="mouse-out" data-testid="mouse-out" class="msg ok" hidden></div></div></section>
+
+<section id="shop"><h2>Shop</h2><p class="hint">Add items, check the cart count and total.</p>
+<div class="card" id="products"></div>
+<div class="card"><b>Cart: <span id="cart-count" data-testid="cart-count">0</span> items</b> · Total: €<span id="cart-total" data-testid="cart-total">0.00</span><br><button id="checkout-btn" data-testid="checkout-btn" disabled>Checkout</button><button id="clear-btn" data-testid="clear-btn" class="alt">Clear cart</button><div id="shop-msg" data-testid="shop-msg" role="status"></div></div></section>
+
+<section id="misc"><h2>Upload, tabs, iframe</h2><p class="hint">File input, accordion, and content inside an iframe.</p>
+<div class="card"><label for="file">Choose a file</label><input type="file" id="file" data-testid="file"><div id="file-out" data-testid="file-out" class="msg ok" hidden></div></div>
+<div class="card acc"><h3><button class="alt" data-p="p1" id="acc1">Section one</button></h3><div class="panel" id="p1">First panel content.</div><h3><button class="alt" data-p="p2" id="acc2">Section two</button></h3><div class="panel" id="p2">Second panel content.</div></div>
+<div class="card"><iframe id="frame" data-testid="frame" title="Practice frame" style="width:100%;height:110px;border:1px solid var(--line);border-radius:6px" srcdoc="<body style='font-family:sans-serif'><p id='frame-text'>Text inside the iframe</p><button id='frame-btn' onclick=&quot;document.getElementById('frame-text').textContent='Clicked inside iframe'&quot;>Click me</button></body>"></iframe></div></section>
+
+<div class="card"><b>Event log</b> <button class="alt" id="log-clear" data-testid="log-clear" style="padding:2px 8px">Clear</button><div id="log" data-testid="log"></div></div>
+</main></div>
+<script>
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const log=t=>{const l=$('#log');l.textContent+=new Date().toLocaleTimeString()+'  '+t+'\n';l.scrollTop=1e9};
+const show=(el,msg,cls)=>{el.className='msg '+cls;el.textContent=msg;el.hidden=false};
+const pages=[['login','Login'],['forms','Forms'],['dynamic','Dynamic'],['alerts','Alerts'],['table','Table'],['mouse','Mouse'],['shop','Shop'],['misc','Upload & more']];
+$('#nav').innerHTML=pages.map(p=>`<a href="#${p[0]}" data-testid="nav-${p[0]}">${p[1]}</a>`).join('');
+function route(){const h=(location.hash||'#login').slice(1);const id=pages.some(p=>p[0]==h)?h:'login';$$('section').forEach(s=>s.classList.toggle('on',s.id==id));$$('nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')=='#'+id))}
+addEventListener('hashchange',route);route();
+
+let fails=0;
+$('#login-form').onsubmit=e=>{e.preventDefault();const m=$('#login-msg'),u=$('#username').value,p=$('#password').value;
+ if(fails>=3){show(m,'Account locked after 3 failed attempts.','err');return}
+ if(!u||!p){show(m,'Username and password are required.','err');return}
+ if(u=='tester'&&p=='Test@123'){fails=0;show(m,'Welcome, tester! Login successful.','ok');log('login ok')}
+ else{fails++;show(m,'Invalid credentials. Attempt '+fails+' of 3.','err');log('login failed '+fails)}};
+
+$('#reg-form').onsubmit=e=>{e.preventDefault();const m=$('#reg-msg'),n=$('#name').value.trim(),em=$('#email').value.trim();
+ if(!n){show(m,'Name is required.','err');return}
+ if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){show(m,'Enter a valid email address.','err');return}
+ show(m,`Registered ${n} (${em}) from ${$('#country').value||'n/a'}.`,'ok');log('registered '+em)};
+
+$('#load-btn').onclick=()=>{$('#loaded').hidden=true;$('#spinner').hidden=false;setTimeout(()=>{$('#spinner').hidden=true;$('#loaded').hidden=false;log('content loaded')},3000)};
+$('#toggle-btn').onclick=()=>{const t=$('#toggle-text');t.hidden=!t.hidden};
+$('#enable-btn').onclick=()=>{$('#enable-input').disabled=false;log('input enabled')};
+$('#rand-btn').onclick=()=>{$('#rand-out').hidden=true;const d=1000+Math.random()*4000;setTimeout(()=>{show($('#rand-out'),'I appeared after '+Math.round(d)+' ms','ok')},d)};
+
+const ao=$('#alert-out');
+$('#alert-btn').onclick=()=>{alert('Hello from an alert');show(ao,'Alert accepted','ok')};
+$('#confirm-btn').onclick=()=>show(ao,confirm('Do you confirm?')?'You pressed OK':'You pressed Cancel','ok');
+$('#prompt-btn').onclick=()=>{const v=prompt('Enter your name');show(ao,v===null?'Prompt cancelled':'Hello, '+v,'ok')};
+$('#modal-btn').onclick=()=>$('#modal').classList.add('open');
+$('#modal-close').onclick=()=>$('#modal').classList.remove('open');
+
+let users=[{id:1,name:'Ava Meyer',role:'QA',age:29},{id:2,name:'Liam Okafor',role:'Dev',age:34},{id:3,name:'Noor Haddad',role:'QA',age:26},{id:4,name:'Mateo Silva',role:'PM',age:41},{id:5,name:'Yuki Tanaka',role:'Dev',age:31},{id:6,name:'Lena Novak',role:'QA',age:38}];
+let sk='id',sd=1;
+function draw(){const f=$('#filter').value.toLowerCase();const r=users.filter(u=>u.name.toLowerCase().includes(f)).sort((a,b)=>(a[sk]>b[sk]?1:-1)*sd);
+ $('#users tbody').innerHTML=r.map(u=>`<tr data-testid="row-${u.id}"><td>${u.id}</td><td>${u.name}</td><td>${u.role}</td><td>${u.age}</td><td><button class="alt" data-del="${u.id}" style="margin:0;padding:3px 8px">Delete</button></td></tr>`).join('');
+ $('#row-count').textContent=r.length+' rows'}
+$('#filter').oninput=draw;
+$$('#users th[data-k]').forEach(h=>h.onclick=()=>{sd=sk==h.dataset.k?-sd:1;sk=h.dataset.k;draw()});
+$('#users').onclick=e=>{const d=e.target.dataset.del;if(d){users=users.filter(u=>u.id!=d);draw();log('deleted row '+d)}};
+draw();
+
+const it=$('#drag-item');it.ondragstart=e=>e.dataTransfer.setData('t','x');
+$$('.zone').forEach(z=>{z.ondragover=e=>e.preventDefault();z.ondrop=e=>{e.preventDefault();z.appendChild(it);show($('#mouse-out'),'Dropped in '+z.id,'ok');log('drop '+z.id)}});
+$('#dbl-btn').ondblclick=()=>show($('#mouse-out'),'Double-click detected','ok');
+$('#ctx-btn').oncontextmenu=e=>{e.preventDefault();show($('#mouse-out'),'Right-click detected','ok')};
+$('#hover-link').onclick=()=>show($('#mouse-out'),'Hidden link clicked','ok');
+
+const prods=[['Notebook',4.5],['Pen set',7.25],['Backpack',39.9]];let cart=[];
+$('#products').innerHTML=prods.map((p,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0"><span>${p[0]} · €${p[1].toFixed(2)}</span><button data-add="${i}" data-testid="add-${i}" style="margin:0">Add to cart</button></div>`).join('');
+function cartDraw(){$('#cart-count').textContent=cart.length;$('#cart-total').textContent=cart.reduce((s,i)=>s+prods[i][1],0).toFixed(2);$('#checkout-btn').disabled=!cart.length}
+$('#products').onclick=e=>{const a=e.target.dataset.add;if(a!==undefined){cart.push(+a);cartDraw();log('added '+prods[a][0])}};
+$('#clear-btn').onclick=()=>{cart=[];cartDraw();$('#shop-msg').textContent=''};
+$('#checkout-btn').onclick=()=>{show($('#shop-msg'),'Order placed for €'+$('#cart-total').textContent,'ok');cart=[];cartDraw()};
+
+$('#file').onchange=e=>{const f=e.target.files[0];if(f)show($('#file-out'),'Selected: '+f.name+' ('+f.size+' bytes)','ok')};
+$$('.acc button').forEach(b=>b.onclick=()=>$('#'+b.dataset.p).classList.toggle('open'));
+$('#log-clear').onclick=()=>$('#log').textContent='';
+</script>
+</body>
+</html>
